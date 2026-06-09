@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crónica de una fuente anunciada</title>
+  <style>
+    :root {
+      --bg: #f4f1e9;
+      --paper: #fffdf8;
+      --ink: #10223a;
+      --muted: #53647b;
+      --line: #d8d2c4;
+      --red: #b01322;
+      --olive: #9a9800;
+      --cyan: #1494c8;
+      --magenta: #c020ce;
+      --shadow: 0 18px 55px rgba(16, 34, 58, .12);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(176,19,34,.92) 0 3px, transparent 3px 100%),
+        linear-gradient(90deg, transparent 0 10px, rgba(154,152,0,.84) 10px 13px, transparent 13px 100%),
+        linear-gradient(90deg, transparent 0 20px, rgba(20,148,200,.82) 20px 23px, transparent 23px 100%),
+        linear-gradient(90deg, transparent 0 31px, rgba(192,32,206,.8) 31px 34px, transparent 34px 100%),
+        var(--bg);
+    }
+    .wrap { width: min(1480px, calc(100% - 28px)); margin: 0 auto; padding: 26px 0 34px; }
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.24fr) minmax(240px, .76fr);
+      gap: 18px;
+      min-height: 300px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 22px;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -28px;
+      width: 300px;
+      background-image: url("general ciclo 1b.png");
+      background-position: left center;
+      background-size: cover;
+      opacity: .22;
+      pointer-events: none;
+    }
+    .hero-copy {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px 0 42px 300px;
+    }
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .hero h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(2rem, 4.6vw, 4.5rem);
+      line-height: 1.04;
+      font-weight: 850;
+    }
+    .hero p {
+      margin: 20px 0 0;
+      max-width: 760px;
+      color: #2e4058;
+      font-size: 1.02rem;
+      line-height: 1.55;
+    }
+    .meta {
+      align-self: center;
+      border-left: 1px solid var(--line);
+      padding: 24px 0 24px 24px;
+    }
+    .meta-item {
+      border-left: 5px solid var(--red);
+      padding: 8px 0 10px 14px;
+      margin-bottom: 10px;
+      font-weight: 780;
+    }
+    .meta-item:nth-child(2) { border-color: var(--olive); }
+    .meta-item:nth-child(3) { border-color: var(--cyan); }
+    .back {
+      display: inline-block;
+      margin-bottom: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(240px, .76fr) minmax(0, 1.24fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .stack { display: grid; gap: 18px; }
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header { padding: 17px 17px 0; }
+    .card-header h2, .card-header h3 {
+      margin: 0 0 6px;
+      font-size: 1.02rem;
+    }
+    .card-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+    .flyer {
+      width: 100%;
+      display: block;
+      padding: 14px;
+    }
+    .embed-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 560px;
+      border: 0;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .presentation-card,
+    .flyer-card {
+      height: 100%;
+    }
+    .section-body { padding: 14px 17px 18px; }
+    .section-body.full { height: 100%; }
+    .resources-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #2e4058;
+      line-height: 1.6;
+    }
+    .resources-list a { color: var(--cyan); }
+    .section-title {
+      margin-top: 18px;
+    }
+    .section-title .card-header {
+      padding-bottom: 17px;
+    }
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .resource-card {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      aspect-ratio: 1 / 1;
+      min-height: 420px;
+    }
+    .resource-preview {
+      width: calc(100% - 28px);
+      height: calc(100% - 14px);
+      margin: 14px 14px 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+    .resource-body {
+      display: grid;
+      gap: 10px;
+      padding: 16px 17px 18px;
+    }
+    .resource-body h4 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+    .resource-body p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+      align-items: start;
+    }
+    .doc-card {
+      display: grid;
+      gap: 10px;
+      padding: 16px 17px 18px;
+    }
+    .doc-card h4 {
+      margin: 0;
+      font-size: .98rem;
+      line-height: 1.35;
+    }
+    .doc-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .doc-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      width: fit-content;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--magenta);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #2e4058;
+    }
+    .guide-card {
+      margin-top: 18px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+      align-items: stretch;
+    }
+    .feature-card {
+      min-height: 680px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .feature-card .section-body {
+      min-height: 0;
+    }
+    .compact-embed {
+      width: 100%;
+      height: 100%;
+      min-height: 560px;
+      border: 0;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .pdf-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      height: 100%;
+      min-height: 560px;
+    }
+    .pdf-mini-card {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      min-height: 260px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .pdf-mini-head {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper);
+    }
+    .pdf-mini-head strong {
+      display: block;
+      font-size: .82rem;
+      line-height: 1.25;
+    }
+    .pdf-mini-head span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: .74rem;
+      line-height: 1.25;
+    }
+    .pdf-mini-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 180px;
+      border: 0;
+      background: #fff;
+    }
+    .pdf-mini-link {
+      padding: 8px 10px;
+      border-top: 1px solid var(--line);
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 800;
+      text-decoration: none;
+      background: var(--paper);
+    }
+    .guide-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #2e4058;
+      line-height: 1.6;
+    }
+    .guide-list li + li { margin-top: 8px; }
+    .video-card {
+      margin-top: 18px;
+    }
+    .video-card .section-body {
+      padding: 14px 17px 18px;
+    }
+    .video-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 520px;
+      border: 0;
+      border-radius: 6px;
+      background: #000;
+      display: block;
+    }
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-copy { padding-left: 250px; }
+      .meta { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0 24px 250px; }
+      .grid { grid-template-columns: 1fr; }
+      .doc-grid { grid-template-columns: 1fr; }
+      .resource-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      body { background: var(--bg); }
+      .wrap { width: min(100% - 24px, 1400px); padding-top: 16px; }
+      .hero::before { inset: 0 0 auto 0; width: 100%; height: 150px; opacity: .16; background-position: center 18%; }
+      .hero-copy { padding: 150px 0 22px; }
+      .meta { padding: 16px 0 22px; }
+      .embed-frame { min-height: 440px; }
+      .resource-card { min-height: 360px; }
+      .compact-embed { min-height: 360px; }
+      .feature-card { min-height: auto; }
+      .pdf-mini-grid { grid-template-columns: 1fr; min-height: auto; }
+      .video-frame { min-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="Index2.html">Volver al panel</a>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><strong>Charlas abiertas</strong> sobre datos e investigación educativa</p>
+        <h1>Crónica de una fuente anunciada</h1>
+        <p>(Inspirado en Crónica de una muerte anunciada de Gabriel García Márquez).</p>
+      </div>
+      <aside class="meta">
+        <div class="meta-item">Panelista: Nancy Montes</div>
+        <div class="meta-item">Fecha: 22/05 - 18 hs</div>
+        <div class="meta-item">Tema: Sistemas de información nominal y registros de estudiantes</div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <article class="card flyer-card">
+        <img class="flyer" src="ciclo Montes 1b.png" alt="Flyer de la charla Crónica de una fuente anunciada" />
+      </article>
+
+      <article class="card presentation-card">
+        <div class="section-body full">
+          <iframe class="embed-frame" src="Presentaci%C3%B3n%20Montes.pdf" title="Presentación Montes" allow="fullscreen"></iframe>
+        </div>
+      </article>
+    </section>
+
+    <section class="card section-title">
+      <div class="card-header">
+        <h3>Links y recursos</h3>
+        <p>Sistemas y tableros para explorar información educativa.</p>
+      </div>
+    </section>
+
+    <section class="resource-grid">
+      <article class="card resource-card">
+        <iframe class="resource-preview" src="https://mesas-siged.github.io/" title="Vista previa de Mesas SIGED"></iframe>
+        <div class="resource-body">
+          <h4>Mesas SIGED</h4>
+          <p>Espacio de trabajo y documentación sobre sistemas de información y gestión educativa.</p>
+          <a class="doc-link" href="https://mesas-siged.github.io/" target="_blank" rel="noopener noreferrer">Abrir sitio</a>
+        </div>
+      </article>
+
+      <article class="card resource-card">
+        <iframe class="resource-preview" src="https://data.educacion.gob.ar/" title="Vista previa de SICDIE"></iframe>
+        <div class="resource-body">
+          <h4>SICDIE</h4>
+          <p>Portal de datos educativos abiertos para consulta, descarga y análisis.</p>
+          <a class="doc-link" href="https://data.educacion.gob.ar/" target="_blank" rel="noopener noreferrer">Abrir sitio</a>
+        </div>
+      </article>
+    </section>
+
+    <section class="feature-grid">
+      <article class="card feature-card">
+        <div class="card-header">
+          <h3>Presentación complementaria</h3>
+          <p>Sistemas de Información y Gestión Educativa: herramientas para la producción de conocimiento.</p>
+        </div>
+        <div class="section-body">
+          <iframe class="compact-embed" src="https://gamma.app/embed/c51wu7ae8xjiyxu" allow="fullscreen" title="Sistemas de Información y Gestión Educativa: ¿Herramientas para la Producción de Conocimiento?"></iframe>
+        </div>
+      </article>
+
+      <article class="card feature-card">
+        <div class="card-header">
+          <h3>Novedad: Protocolo para la entrega de bases de microdatos</h3>
+          <p>Documentos disponibles en la carpeta AccesibilidadDatos.</p>
+        </div>
+        <div class="section-body">
+          <div class="pdf-mini-grid">
+            <article class="pdf-mini-card">
+              <div class="pdf-mini-head">
+                <strong>Disposición</strong>
+                <span>Marco general</span>
+              </div>
+              <iframe class="pdf-mini-frame" src="AccesibilidadDatos/DI-2026-45416764-APN-SSIYEE%25MCH.pdf" title="Disposición general"></iframe>
+              <a class="pdf-mini-link" href="AccesibilidadDatos/DI-2026-45416764-APN-SSIYEE%25MCH.pdf" target="_blank" rel="noopener noreferrer">Abrir documento</a>
+            </article>
+
+            <article class="pdf-mini-card">
+              <div class="pdf-mini-head">
+                <strong>Anexo I</strong>
+                <span>Protocolo de acceso</span>
+              </div>
+              <iframe class="pdf-mini-frame" src="AccesibilidadDatos/IF-2026-42085304-APN-SSIYEE%25MCH%20(1).pdf" title="Anexo I Protocolo"></iframe>
+              <a class="pdf-mini-link" href="AccesibilidadDatos/IF-2026-42085304-APN-SSIYEE%25MCH%20(1).pdf" target="_blank" rel="noopener noreferrer">Abrir documento</a>
+            </article>
+
+            <article class="pdf-mini-card">
+              <div class="pdf-mini-head">
+                <strong>Anexo II</strong>
+                <span>Nota y formulario</span>
+              </div>
+              <iframe class="pdf-mini-frame" src="AccesibilidadDatos/IF-2026-42085151-APN-SSIYEE%25MCH.pdf" title="Anexo II Nota y formulario"></iframe>
+              <a class="pdf-mini-link" href="AccesibilidadDatos/IF-2026-42085151-APN-SSIYEE%25MCH.pdf" target="_blank" rel="noopener noreferrer">Abrir documento</a>
+            </article>
+
+            <article class="pdf-mini-card">
+              <div class="pdf-mini-head">
+                <strong>Anexo III</strong>
+                <span>Confidencialidad</span>
+              </div>
+              <iframe class="pdf-mini-frame" src="AccesibilidadDatos/IF-2026-42084999-APN-SSIYEE%25MCH.pdf" title="Anexo III Confidencialidad"></iframe>
+              <a class="pdf-mini-link" href="AccesibilidadDatos/IF-2026-42084999-APN-SSIYEE%25MCH.pdf" target="_blank" rel="noopener noreferrer">Abrir documento</a>
+            </article>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card video-card">
+      <div class="card-header">
+        <h3>Video de la charla</h3>
+        <p>Registro completo de la presentación.</p>
+      </div>
+      <div class="section-body">
+        <iframe class="video-frame" src="https://www.youtube.com/embed/SCSvPBkmYJI" title="Video de la charla de Nancy Montes" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

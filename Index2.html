@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visualización de inscriptos/as</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://cdn.plot.ly">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #f4f1e9;
+      --paper: #fffdf8;
+      --ink: #10223a;
+      --muted: #53647b;
+      --line: #d8d2c4;
+      --red: #b01322;
+      --olive: #9a9800;
+      --cyan: #1494c8;
+      --magenta: #c020ce;
+      --aqua: #72cbbd;
+      --shadow: 0 18px 55px rgba(16, 34, 58, .12);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        linear-gradient(90deg, rgba(176,19,34,.92) 0 3px, transparent 3px 100%),
+        linear-gradient(90deg, transparent 0 10px, rgba(154,152,0,.84) 10px 13px, transparent 13px 100%),
+        linear-gradient(90deg, transparent 0 20px, rgba(20,148,200,.82) 20px 23px, transparent 23px 100%),
+        linear-gradient(90deg, transparent 0 31px, rgba(192,32,206,.8) 31px 34px, transparent 34px 100%),
+        var(--bg);
+      color: var(--ink);
+    }
+
+    .wrap {
+      width: min(1480px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 26px 0 34px;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 360px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 30px;
+      align-items: stretch;
+      margin-bottom: 18px;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -42px;
+      width: 330px;
+      background-image: url("general ciclo 2b.png");
+      background-position: left center;
+      background-size: cover;
+      opacity: .28;
+      filter: saturate(.95);
+      pointer-events: none;
+    }
+
+    .hero-copy {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px 0 42px 330px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      font-size: 1rem;
+      color: var(--muted);
+      letter-spacing: 0;
+    }
+
+    .eyebrow strong { color: var(--ink); }
+
+    .hero h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(2.25rem, 5vw, 5rem);
+      line-height: 1.04;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 22px 0 0;
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: #2e4058;
+    }
+
+    .hero-panel {
+      align-self: center;
+      border-left: 1px solid var(--line);
+      padding: 28px 0 28px 28px;
+    }
+
+    .status {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.45;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .hero-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--magenta);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+
+    .source-card {
+      display: grid;
+      gap: 12px;
+      padding-right: 10px;
+    }
+
+    .source-pill {
+      display: block;
+      border-left: 5px solid var(--cyan);
+      padding: 9px 0 10px 14px;
+      color: var(--ink);
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform .18s ease, color .18s ease;
+    }
+
+    .source-pill:hover {
+      transform: translateX(4px);
+      color: var(--red);
+    }
+
+    .source-pill:nth-child(2) { border-color: var(--red); }
+    .source-pill:nth-child(3) { border-color: var(--olive); }
+    .source-pill:nth-child(4) { border-color: var(--magenta); }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+
+    .control, .card, .stat {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .control {
+      padding: 13px 14px;
+      box-shadow: none;
+    }
+
+    .control label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+
+    .control input, .control select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #cfc7b9;
+      border-radius: 6px;
+      padding: 9px 10px;
+      background: #fff;
+      color: var(--ink);
+      font-size: .95rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      padding: 17px;
+      box-shadow: none;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .stat .value {
+      margin-top: 8px;
+      font-size: clamp(1.65rem, 2.8vw, 2.45rem);
+      font-weight: 880;
+      line-height: 1;
+    }
+
+    .stat .sub {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: .86rem;
+      line-height: 1.35;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .card {
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 17px 17px 0;
+      min-height: 78px;
+    }
+
+    .card-header h3 {
+      margin: 0 0 6px;
+      font-size: 1.03rem;
+      line-height: 1.25;
+    }
+
+    .card-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.42;
+    }
+
+    .plot {
+      height: 360px;
+      min-height: 360px;
+      padding: 4px 10px 10px;
+    }
+
+    .plot.map-compact {
+      height: 520px;
+    }
+
+    #map {
+      height: 520px;
+      width: min(100% - 120px, 1120px);
+      margin: 30px auto 30px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #e7efe9;
+    }
+    .active-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      margin-bottom: 18px;
+    }
+
+    #activeFilters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-chip,
+    .clear-filters {
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 10px;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-size: .86rem;
+      font-weight: 760;
+    }
+
+    .filter-chip {
+      border-left: 5px solid var(--cyan);
+    }
+
+    .clear-filters {
+      cursor: pointer;
+      color: var(--red);
+    }
+
+    .clear-filters[hidden] {
+      display: none;
+    }
+
+    .leaflet-container {
+      font-family: inherit;
+      color: var(--ink);
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px;
+    }
+
+    .map-legend {
+      background: rgba(255, 253, 248, .96);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--ink);
+      box-shadow: 0 8px 24px rgba(16, 34, 58, .12);
+      font-size: .86rem;
+      line-height: 1.35;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      margin-right: 7px;
+      border-radius: 50%;
+      background: var(--magenta);
+      vertical-align: -1px;
+    }
+
+    .motivation-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr);
+      gap: 14px;
+      padding: 14px 17px 17px;
+    }
+
+    .word-cloud {
+      min-height: 360px;
+      position: relative;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 24%, rgba(176,19,34,.08), transparent 22%),
+        radial-gradient(circle at 50% 70%, rgba(20,148,200,.08), transparent 26%),
+        radial-gradient(circle at 82% 32%, rgba(192,32,206,.08), transparent 24%),
+        linear-gradient(180deg, #fff 0%, #fffaf0 100%);
+    }
+
+    .word-cloud span {
+      position: absolute;
+      left: var(--wave-x);
+      top: var(--wave-y);
+      display: block;
+      font-weight: 850;
+      line-height: 1;
+      color: var(--ink);
+      cursor: pointer;
+      animation: floatWord var(--float-duration, 8s) ease-in-out infinite;
+      animation-delay: var(--float-delay, 0s);
+      transform-origin: center;
+      will-change: transform;
+    }
+
+    .word-cloud.is-empty {
+      display: grid;
+      place-items: center;
+    }
+
+    .word-cloud.is-empty span {
+      position: static;
+    }
+
+    .word-cloud span.is-active {
+      text-decoration: underline;
+      text-decoration-thickness: 3px;
+      text-underline-offset: 5px;
+      animation-play-state: paused;
+      transform: translateY(-3px) scale(1.08);
+    }
+
+    .word-cloud span:hover {
+      animation-play-state: paused;
+      transform: translateY(-4px) scale(1.08);
+    }
+
+    @keyframes floatWord {
+      0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+      35% { transform: translateY(var(--float-y, -7px)) rotate(var(--float-r, 1deg)) scale(1.025); }
+      70% { transform: translateY(calc(var(--float-y, -7px) * -0.35)) rotate(calc(var(--float-r, 1deg) * -1)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .word-cloud span {
+        animation: none;
+      }
+    }
+
+    .nlp-panel {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .theme-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) 48px;
+      gap: 10px;
+      align-items: center;
+      font-size: .9rem;
+      width: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .theme-row.is-active strong:first-child {
+      color: var(--red);
+    }
+
+    .theme-bar {
+      position: relative;
+      height: 12px;
+      margin-top: 6px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #ebe4d4;
+    }
+
+    .theme-bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--cyan);
+    }
+
+    .quote-list {
+      margin: 8px 0 0;
+      padding: 0;
+      list-style: none;
+      color: #31445c;
+      font-size: .9rem;
+      line-height: 1.42;
+    }
+
+    .quote-list li {
+      border-top: 1px solid var(--line);
+      padding: 10px 0;
+    }
+
+    .motivation-results {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .motivation-results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 760;
+    }
+
+    .motivation-results-clear {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--red);
+      cursor: pointer;
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 760;
+      padding: 5px 9px;
+    }
+
+    .motivation-results-scroll {
+      max-height: 330px;
+      overflow: auto;
+    }
+
+    .motivation-results table {
+      font-size: .86rem;
+    }
+
+    .motivation-results td:last-child {
+      min-width: 360px;
+      line-height: 1.42;
+    }
+
+    .motivation-tools {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .ai-button {
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--magenta);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-size: .86rem;
+      font-weight: 800;
+      padding: 6px 10px;
+    }
+
+    .ai-button:disabled {
+      cursor: wait;
+      opacity: .72;
+    }
+
+    .ai-status {
+      color: var(--muted);
+      font-size: .84rem;
+      line-height: 1.35;
+    }
+
+    .ai-progress {
+      flex-basis: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity .2s ease, max-height .2s ease;
+    }
+
+    .ai-progress.is-visible {
+      opacity: 1;
+      max-height: 32px;
+    }
+
+    .ai-progress-track {
+      height: 9px;
+      border-radius: 99px;
+      background: #ebe4d4;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .ai-progress-bar {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--magenta));
+      transition: width .25s ease;
+    }
+
+    .ai-progress-value {
+      min-width: 42px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .table-wrap {
+      padding: 12px 17px 18px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: .78rem;
+      text-transform: uppercase;
+    }
+
+    .quality-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 17px 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid var(--line);
+      border-left-width: 5px;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font-size: .86rem;
+      font-weight: 750;
+    }
+
+    .badge.warn { border-left-color: var(--red); }
+    .badge.ok { border-left-color: var(--aqua); }
+    .badge.info { border-left-color: var(--cyan); }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1180px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-copy { padding-left: 270px; }
+      .hero-panel { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0 24px 270px; }
+      .controls { grid-template-columns: 1fr 1fr; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+      .motivation-layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      body { background: var(--bg); }
+      .wrap { width: min(100% - 24px, 1480px); padding-top: 16px; }
+      .hero::before { inset: 0 0 auto 0; width: 100%; height: 150px; opacity: .18; background-position: center 18%; }
+      .hero-copy { padding: 150px 0 22px; }
+      .hero-panel { padding: 16px 0 22px; }
+      .controls, .stats { grid-template-columns: 1fr; }
+      .grid { gap: 12px; }
+      .span-4, .span-5, .span-6, .span-7, .span-8, .span-12 { grid-column: span 12; }
+      #map { height: 450px; margin-inline: 12px; }
+      .plot { height: 340px; min-height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><strong>Charlas abiertas</strong> sobre datos e investigación educativa</p>
+        <h1>4 fuentes de datos en busca de investigadores/as</h1>
+        <p>Como somos bastante fanáticos/as de los datos… no pudimos resistir la tentación 😄 y armamos un formulario (cortito) para conocer un poco más a quienes van a participar.</p>
+        <div class="status" id="status">Cargando datos...</div>
+        <div class="hero-actions">
+          <a class="hero-link" href="https://forms.gle/AHasUucWkBi89ntDA" target="_blank" rel="noopener noreferrer">Si aún no lo completaste, ¡ahora es un buen momento para hacerlo!</a>
+        </div>
+      </div>
+      <aside class="hero-panel">
+        <div class="source-card">
+          <a class="source-pill" href="bucciarelli.html">Datos que están solos y esperan - Maria Eugenia Bucciarelli - 24/04 - 18hs</a>
+          <a class="source-pill" href="montes.html">Crónica de una fuente anunciada - Nancy Montes - 22/05 - 18hs</a>
+          <a class="source-pill" href="linares.html">La fuente casi perfecta - Santiago Linares - 29/05 -18hs</a>
+          <a class="source-pill" href="tocho.html">Un dato ya pronto serás - Juan Tocho - 05/06 - 18hs</a>
+        </div>
+      </aside>
+    </section>
+
+    <section class="controls">
+      <div class="control">
+        <label for="search">Buscar ciudad, país o texto</label>
+        <input id="search" type="text" placeholder="Ej. Argentina, Bogotá, tesis, datos" />
+      </div>
+      <div class="control">
+        <label for="countryFilter">País</label>
+        <select id="countryFilter"><option value="">Todos</option></select>
+      </div>
+      <div class="control">
+        <label for="educationFilter">Nivel educativo</label>
+        <select id="educationFilter"><option value="">Todos</option></select>
+      </div>
+      <div class="control">
+        <label for="areaFilter">Área</label>
+        <select id="areaFilter"><option value="">Todas</option></select>
+      </div>
+    </section>
+
+    <section class="active-filters" aria-live="polite">
+      <div id="activeFilters"></div>
+      <button class="clear-filters" id="clearFilters" type="button" hidden>Limpiar filtros interactivos</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <div class="label">Respuestas</div>
+        <div class="value" id="statResponses">-</div>
+        <div class="sub">Formularios analizados</div>
+      </div>
+      <div class="stat">
+        <div class="label">Países</div>
+        <div class="value" id="statCountries">-</div>
+        <div class="sub">Identificados tras limpieza</div>
+      </div>
+      <div class="stat">
+        <div class="label">Ciudades</div>
+        <div class="value" id="statCities">-</div>
+        <div class="sub">Localidades</div>
+      </div>
+      <div class="stat">
+        <div class="label">Edad promedio</div>
+        <div class="value" id="statAvgAge">-</div>
+        <div class="sub">Sobre edades válidas</div>
+      </div>
+      <div class="stat">
+        <div class="label">Motivaciones</div>
+        <div class="value" id="statReasons">-</div>
+        <div class="sub">Respuestas con texto</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card span-12">
+        <div class="card-header">
+          <h3>Mapa de países y ciudades</h3>
+          <p>Los países se agregan como polígonos y las ciudades como puntos proporcionales al conteo de inscripciones.</p>
+        </div>
+        <div id="map"></div>
+      </article>
+
+      <article class="card span-6">
+        <div class="card-header">
+          <h3>Distribución por país</h3>
+          <p></p>
+        </div>
+        <div class="plot" id="chartCountries"></div>
+      </article>
+
+      <article class="card span-6">
+        <div class="card-header">
+          <h3>Distribución por grupos de edad</h3>
+          <p>Rangos etarios construidos a partir de la edad declarada.</p>
+        </div>
+        <div class="plot" id="chartAge"></div>
+      </article>
+
+      <article class="card span-6">
+        <div class="card-header">
+          <h3>Nivel educativo máximo</h3>
+          <p>Frecuencia de respuestas por categoría declarada.</p>
+        </div>
+        <div class="plot" id="chartEducation"></div>
+      </article>
+
+      <article class="card span-6">
+        <div class="card-header">
+          <h3>Áreas de investigación / trabajo / interés</h3>
+          <p>Se contabiliza cada selección de manera independiente.</p>
+        </div>
+        <div class="plot" id="chartAreas"></div>
+      </article>
+
+      <article class="card span-12">
+        <div class="card-header">
+          <h3>¿Qué motivó la inscripción?</h3>
+          <p>Nube de palabras y clasificación exploratoria por temas frecuentes en las respuestas abiertas.</p>
+        </div>
+        <div class="motivation-layout">
+          <div class="word-cloud" id="wordCloud"></div>
+          <div class="nlp-panel">
+            <div class="motivation-tools">
+              <button class="ai-button" id="runAiThemes" type="button">Clasificar con IA local</button>
+              <span class="ai-status" id="aiStatus">Modo actual: palabras clave</span>
+              <div class="ai-progress" id="aiProgress" aria-hidden="true">
+                <div class="ai-progress-track">
+                  <div class="ai-progress-bar" id="aiProgressBar"></div>
+                </div>
+                <span class="ai-progress-value" id="aiProgressValue">0%</span>
+              </div>
+            </div>
+            <div id="themePanel"></div>
+            <div class="motivation-results">
+              <div class="motivation-results-header">
+                <span id="motivationResultsTitle">Respuestas con motivación</span>
+                <button class="motivation-results-clear" id="clearMotivationSelection" type="button" hidden>Ver todas</button>
+              </div>
+              <div class="motivation-results-scroll" id="motivationResults"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <div class="footer-note">
+      El mapa usa Leaflet. Para no depender de geocodificación externa, las ciudades frecuentes del formulario tienen coordenadas locales y los casos no reconocidos se ubican en el centro del país identificado.
+    </div>
+  </div>
+
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS5PQsYf70AwUnkY94H7NPKHvS5HvlBLnnjlNviBmU1Tzw5X_jBkAuEHJo0r-B3jdeUytEj_hW8IN9C/pub?gid=802750238&single=true&output=csv";
+    const COUNTRY_GEOJSON_URL = "https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson";
+
+    const COL_TIMESTAMP = "Marca temporal";
+    const COL_LOCATION = "¿En qué ciudad y país vivís?\n(Nos ayuda mucho si lo ponés separado por coma, por ejemplo: Bogotá, Colombia)";
+    const COL_AGE = "¿Qué edad tenés?";
+    const COL_EDUCATION = "¿Cuál es tu máximo nivel educativo?\n(Atención: incompleto puede ser tanto si lo estas cursando como si ya lo cursaste y aun no te titulaste)";
+    const COL_AREA = "¿Cuál es tu área de investigación/trabajo o interés?\n(Podés elegir más de una, y si no encontrás la tuya, podés agregar en la opción \"otros\")";
+    const COL_REASON = "¿Qué te motivó a inscribirte en la/s charla/s?";
+    const TRANSFORMERS_JS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+    const EMBEDDING_MODEL = "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
+
+    const CANONICAL_AREAS = [
+      "Trayectorias educativas (ingreso, permanencia, graduación)",
+      "Desigualdades educativas",
+      "Evaluación de aprendizajes",
+      "Políticas educativas basadas en evidencia",
+      "Planeamiento y gestión educativa",
+      "Sistemas de información educativa",
+      "Analítica del aprendizaje (learning analytics)",
+      "Educación y transformación digital",
+      "Uso de datos en instituciones educativas",
+      "Monitoreo y evaluación de programas/proyectos"
+    ];
+
+    const palette = ["#1494c8", "#b01322", "#9a9800", "#c020ce", "#72cbbd", "#10223a"];
+    const countryColors = new Map();
+    const countryAliases = {
+      argentina: "Argentina",
+      arg: "Argentina",
+      colombia: "Colombia",
+      honduras: "Honduras",
+      mexico: "México",
+      "méxico": "México",
+      uruguay: "Uruguay",
+      venezuela: "Venezuela",
+      bolivia: "Bolivia",
+      ecuador: "Ecuador",
+      peru: "Perú",
+      "perú": "Perú",
+      "estados unidos": "Estados Unidos",
+      usa: "Estados Unidos",
+      eeuu: "Estados Unidos",
+      "united states": "Estados Unidos"
+    };
+
+    const countryMeta = {
+      "Argentina": { iso3: "ARG", center: [-38.42, -63.62], aliases: ["argentina", "arg"] },
+      "Colombia": { iso3: "COL", center: [4.57, -74.30], aliases: ["colombia"] },
+      "Honduras": { iso3: "HND", center: [14.75, -86.24], aliases: ["honduras"] },
+      "México": { iso3: "MEX", center: [23.63, -102.55], aliases: ["mexico", "méxico"] },
+      "Uruguay": { iso3: "URY", center: [-32.52, -55.77], aliases: ["uruguay"] },
+      "Venezuela": { iso3: "VEN", center: [6.42, -66.59], aliases: ["venezuela"] },
+      "Bolivia": { iso3: "BOL", center: [-16.29, -63.59], aliases: ["bolivia"] },
+      "Ecuador": { iso3: "ECU", center: [-1.83, -78.18], aliases: ["ecuador"] },
+      "Perú": { iso3: "PER", center: [-9.19, -75.02], aliases: ["peru", "perú"] },
+      "Estados Unidos": { iso3: "USA", center: [37.09, -95.71], aliases: ["estados unidos", "usa", "eeuu", "united states"] }
+    };
+
+    const cityGazetteer = {
+      "bahia blanca": { city: "Bahía Blanca", country: "Argentina", lat: -38.72, lon: -62.27 },
+      "bariloche": { city: "Bariloche", country: "Argentina", lat: -41.13, lon: -71.31 },
+      "san carlos de bariloche": { city: "Bariloche", country: "Argentina", lat: -41.13, lon: -71.31 },
+      "barrancas": { city: "Barrancas", country: "Argentina", lat: -32.23, lon: -60.98 },
+      "bernal": { city: "Bernal", country: "Argentina", lat: -34.71, lon: -58.28 },
+      "buenos aires": { city: "Buenos Aires", country: "Argentina", lat: -34.60, lon: -58.38 },
+      "buenos airez": { city: "Buenos Aires", country: "Argentina", lat: -34.60, lon: -58.38 },
+      "buens aires": { city: "Buenos Aires", country: "Argentina", lat: -34.60, lon: -58.38 },
+      "caba": { city: "CABA", country: "Argentina", lat: -34.60, lon: -58.38 },
+      "ciudad autonoma de buenos aires": { city: "CABA", country: "Argentina", lat: -34.60, lon: -58.38 },
+      "ciudad autónoma de buenos aires": { city: "CABA", country: "Argentina", lat: -34.60, lon: -58.38 },
+      "caleta olivia": { city: "Caleta Olivia", country: "Argentina", lat: -46.44, lon: -67.52 },
+      "comodoro rivadavia": { city: "Comodoro Rivadavia", country: "Argentina", lat: -45.87, lon: -67.50 },
+      "concepcion del uruguay": { city: "Concepción del Uruguay", country: "Argentina", lat: -32.48, lon: -58.24 },
+      "concepción del uruguay": { city: "Concepción del Uruguay", country: "Argentina", lat: -32.48, lon: -58.24 },
+      "cordoba": { city: "Córdoba", country: "Argentina", lat: -31.42, lon: -64.18 },
+      "córdoba": { city: "Córdoba", country: "Argentina", lat: -31.42, lon: -64.18 },
+      "coronda": { city: "Coronda", country: "Argentina", lat: -31.97, lon: -60.92 },
+      "entre rios": { city: "Entre Ríos", country: "Argentina", lat: -31.74, lon: -60.52 },
+      "entre ríos": { city: "Entre Ríos", country: "Argentina", lat: -31.74, lon: -60.52 },
+      "general guemes": { city: "General Güemes", country: "Argentina", lat: -24.67, lon: -65.05 },
+      "general güemes": { city: "General Güemes", country: "Argentina", lat: -24.67, lon: -65.05 },
+      "ituzaingo": { city: "Ituzaingó", country: "Argentina", lat: -34.66, lon: -58.67 },
+      "ituzaingó": { city: "Ituzaingó", country: "Argentina", lat: -34.66, lon: -58.67 },
+      "la plata": { city: "La Plata", country: "Argentina", lat: -34.92, lon: -57.95 },
+      "mar del plata": { city: "Mar del Plata", country: "Argentina", lat: -38.00, lon: -57.56 },
+      "mendoza": { city: "Mendoza", country: "Argentina", lat: -32.89, lon: -68.84 },
+      "moreno": { city: "Moreno", country: "Argentina", lat: -34.65, lon: -58.79 },
+      "neuquen": { city: "Neuquén", country: "Argentina", lat: -38.95, lon: -68.06 },
+      "neuquén": { city: "Neuquén", country: "Argentina", lat: -38.95, lon: -68.06 },
+      "olavarria": { city: "Olavarría", country: "Argentina", lat: -36.89, lon: -60.32 },
+      "olavarría": { city: "Olavarría", country: "Argentina", lat: -36.89, lon: -60.32 },
+      "oro verde": { city: "Oro Verde", country: "Argentina", lat: -31.82, lon: -60.52 },
+      "parana": { city: "Paraná", country: "Argentina", lat: -31.73, lon: -60.53 },
+      "paraná": { city: "Paraná", country: "Argentina", lat: -31.73, lon: -60.53 },
+      "posadas": { city: "Posadas", country: "Argentina", lat: -27.37, lon: -55.90 },
+      "rio ceballos": { city: "Río Ceballos", country: "Argentina", lat: -31.17, lon: -64.32 },
+      "río ceballos": { city: "Río Ceballos", country: "Argentina", lat: -31.17, lon: -64.32 },
+      "rosario": { city: "Rosario", country: "Argentina", lat: -32.94, lon: -60.65 },
+      "salta": { city: "Salta", country: "Argentina", lat: -24.78, lon: -65.42 },
+      "san fernando del valle de catamarca": { city: "San Fernando del Valle de Catamarca", country: "Argentina", lat: -28.47, lon: -65.78 },
+      "san francisco": { city: "San Francisco", country: "Estados Unidos", lat: 37.77, lon: -122.42 },
+      "san juan": { city: "San Juan", country: "Argentina", lat: -31.54, lon: -68.54 },
+      "san luis": { city: "San Luis", country: "Argentina", lat: -33.30, lon: -66.34 },
+      "san martin de los andes": { city: "San Martín de los Andes", country: "Argentina", lat: -40.16, lon: -71.35 },
+      "san martín de los andes": { city: "San Martín de los Andes", country: "Argentina", lat: -40.16, lon: -71.35 },
+      "san miguel de tucuman": { city: "San Miguel de Tucumán", country: "Argentina", lat: -26.83, lon: -65.20 },
+      "san miguel de tucumán": { city: "San Miguel de Tucumán", country: "Argentina", lat: -26.83, lon: -65.20 },
+      "san miuel de tucuman": { city: "San Miguel de Tucumán", country: "Argentina", lat: -26.83, lon: -65.20 },
+      "san salvador de jujuy": { city: "San Salvador de Jujuy", country: "Argentina", lat: -24.19, lon: -65.30 },
+      "santa cruz": { city: "Santa Cruz", country: "Argentina", lat: -48.77, lon: -70.25 },
+      "santa fe": { city: "Santa Fe", country: "Argentina", lat: -31.63, lon: -60.70 },
+      "santa rosa": { city: "Santa Rosa", country: "Argentina", lat: -36.62, lon: -64.29 },
+      "tandil": { city: "Tandil", country: "Argentina", lat: -37.32, lon: -59.13 },
+      "tucuman": { city: "San Miguel de Tucumán", country: "Argentina", lat: -26.83, lon: -65.20 },
+      "tucumán": { city: "San Miguel de Tucumán", country: "Argentina", lat: -26.83, lon: -65.20 },
+      "bogota": { city: "Bogotá", country: "Colombia", lat: 4.71, lon: -74.07 },
+      "bogotá": { city: "Bogotá", country: "Colombia", lat: 4.71, lon: -74.07 },
+      "cali": { city: "Cali", country: "Colombia", lat: 3.45, lon: -76.53 },
+      "manizales": { city: "Manizales", country: "Colombia", lat: 5.07, lon: -75.52 },
+      "neiva": { city: "Neiva", country: "Colombia", lat: 2.94, lon: -75.28 },
+      "pereira": { city: "Pereira", country: "Colombia", lat: 4.81, lon: -75.69 },
+      "riohacha": { city: "Riohacha", country: "Colombia", lat: 11.54, lon: -72.91 },
+      "tegucigalpa": { city: "Tegucigalpa", country: "Honduras", lat: 14.07, lon: -87.21 },
+      "ciudad de mexico": { city: "Ciudad de México", country: "México", lat: 19.43, lon: -99.13 },
+      "ciudad de méxico": { city: "Ciudad de México", country: "México", lat: 19.43, lon: -99.13 },
+      "estado de mexico": { city: "Estado de México", country: "México", lat: 19.35, lon: -99.63 },
+      "estado de méxico": { city: "Estado de México", country: "México", lat: 19.35, lon: -99.63 },
+      "veracruz": { city: "Veracruz", country: "México", lat: 19.17, lon: -96.13 },
+      "xalapa": { city: "Xalapa", country: "México", lat: 19.54, lon: -96.91 },
+      "caracas": { city: "Caracas", country: "Venezuela", lat: 10.48, lon: -66.90 },
+      "merida": { city: "Mérida", country: "Venezuela", lat: 8.59, lon: -71.16 },
+      "mérida": { city: "Mérida", country: "Venezuela", lat: 8.59, lon: -71.16 },
+      "el limon": { city: "El Limón", country: "Venezuela", lat: 10.30, lon: -67.63 },
+      "el limón": { city: "El Limón", country: "Venezuela", lat: 10.30, lon: -67.63 },
+      "maracay": { city: "Maracay", country: "Venezuela", lat: 10.25, lon: -67.60 },
+      "distrito capital": { city: "Caracas", country: "Venezuela", lat: 10.48, lon: -66.90 },
+      "montevideo": { city: "Montevideo", country: "Uruguay", lat: -34.90, lon: -56.16 },
+      "paysandu": { city: "Paysandú", country: "Uruguay", lat: -32.32, lon: -58.08 },
+      "paysandú": { city: "Paysandú", country: "Uruguay", lat: -32.32, lon: -58.08 },
+      "la paz": { city: "La Paz", country: "Bolivia", lat: -16.50, lon: -68.15 },
+      "quito": { city: "Quito", country: "Ecuador", lat: -0.18, lon: -78.47 },
+      "lima": { city: "Lima", country: "Perú", lat: -12.05, lon: -77.04 }
+    };
+
+    const stopwords = new Set("a al algo ante aqui así aun aunque cada como con contra cual cuando de del desde donde dos el ella ello en entre era eran es esa ese eso esta estas este esto estos fue ha hasta hay la las le les lo los mas me mi mis mucho muy no nos o para pero por porque que se sin sobre son su sus te tener tiene un una unas uno unos y ya más qué quien quienes".split(" "));
+    const themeDefs = [
+      { name: "Aprender y actualizarse", color: "#1494c8", words: ["aprender", "conocer", "actualizar", "actualizarme", "formacion", "capacitarme", "conocimiento", "herramientas", "perfeccionando", "nuevas"], description: "Deseo de aprender, actualizar conocimientos, capacitarse, adquirir herramientas nuevas y mejorar la formación profesional." },
+      { name: "Datos, fuentes y métodos", color: "#b01322", words: ["datos", "fuentes", "bases", "estadistica", "estadisticas", "indicadores", "analisis", "cuantitativa", "metodos", "procesamiento"], description: "Interés por datos educativos, fuentes de información, bases de datos, estadísticas, indicadores, métodos de análisis y procesamiento de información." },
+      { name: "Tesis e investigación", color: "#9a9800", words: ["tesis", "doctorado", "maestria", "investigacion", "investigaciones", "doctoral", "metodologico", "campo"], description: "Motivación vinculada a tesis, doctorado, maestría, investigación académica, marco metodológico, definición de tema o producción de conocimiento." },
+      { name: "Trabajo y gestión educativa", color: "#c020ce", words: ["trabajo", "laboral", "programas", "gestion", "planeamiento", "ministeriales", "instituciones", "proyecto", "territorio"], description: "Aplicación en el trabajo, gestión educativa, planeamiento, programas, proyectos, instituciones, políticas públicas o intervención territorial." },
+      { name: "Intercambio e institución", color: "#72cbbd", words: ["intercambiar", "compartir", "flacso", "expositores", "oradores", "disertantes", "voces", "institucion"], description: "Interés por compartir experiencias, escuchar especialistas, conocer expositores, acercarse a FLACSO o participar de un espacio institucional." },
+      { name: "IA y digitalización", color: "#10223a", words: ["ia", "digital", "digitales", "inteligencia", "artificial", "plataformas", "software", "learning"], description: "Interés por inteligencia artificial, digitalización, plataformas, transformación digital, software, tecnología y aprendizaje mediado por datos." }
+    ];
+
+    let rawData = [];
+    let map;
+    let countryLayerGroup;
+    let cityLayerGroup;
+    let countryGeojson = null;
+
+    const statusEl = document.getElementById("status");
+    const searchEl = document.getElementById("search");
+    const countryEl = document.getElementById("countryFilter");
+    const educationEl = document.getElementById("educationFilter");
+    const areaEl = document.getElementById("areaFilter");
+    const activeFiltersEl = document.getElementById("activeFilters");
+    const clearFiltersEl = document.getElementById("clearFilters");
+    const clearMotivationSelectionEl = document.getElementById("clearMotivationSelection");
+    const runAiThemesEl = document.getElementById("runAiThemes");
+    const aiStatusEl = document.getElementById("aiStatus");
+    const aiProgressEl = document.getElementById("aiProgress");
+    const aiProgressBarEl = document.getElementById("aiProgressBar");
+    const aiProgressValueEl = document.getElementById("aiProgressValue");
+
+    const chartFilters = {
+      country: "",
+      age: "",
+      education: "",
+      area: ""
+    };
+
+    let motivationSelection = {
+      type: "",
+      value: ""
+    };
+
+    const aiThemes = {
+      mode: "keywords",
+      loading: false,
+      extractor: null,
+      themeVectors: null,
+      error: "",
+      assignments: new Map()
+    };
+
+    function stripDiacritics(str = "") {
+      return String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function normalizeSpaces(str = "") {
+      return String(str).replace(/\s+/g, " ").trim();
+    }
+
+    function normalizeKey(str = "") {
+      return stripDiacritics(normalizeSpaces(str).toLowerCase())
+        .replace(/[()]/g, " ")
+        .replace(/[^\p{L}\p{N}\s]/gu, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function toTitleCase(str = "") {
+      return normalizeSpaces(str).toLowerCase().replace(/\p{L}+/gu, word => (
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ));
+    }
+
+    function normalizeCountry(value = "") {
+      const key = normalizeKey(value);
+      return countryAliases[key] || countryAliases[stripDiacritics(key)] || toTitleCase(value);
+    }
+
+    function getCountryColor(country) {
+      if (!countryColors.has(country)) {
+        countryColors.set(country, palette[countryColors.size % palette.length]);
+      }
+      return countryColors.get(country);
+    }
+
+    function extractCountry(text) {
+      const normalized = normalizeKey(text);
+      const padded = ` ${normalized} `;
+      const matches = Object.entries(countryMeta)
+        .flatMap(([country, meta]) => meta.aliases.map(alias => ({ country, alias: normalizeKey(alias) })))
+        .filter(item => padded.includes(` ${item.alias} `))
+        .sort((a, b) => b.alias.length - a.alias.length);
+      return matches[0]?.country || "";
+    }
+
+    function extractCity(text) {
+      const normalized = normalizeKey(text);
+      const entries = Object.entries(cityGazetteer)
+        .filter(([key]) => normalized.includes(normalizeKey(key)))
+        .sort((a, b) => b[0].length - a[0].length);
+      return entries[0]?.[1] || null;
+    }
+
+    function cleanCityCandidate(text, country = "") {
+      let value = normalizeSpaces(text)
+        .replace(/\([^)]*\)/g, " ")
+        .replace(/['´`]/g, " ")
+        .replace(/\s+-\s+|\s*\/\s*/g, ",")
+        .replace(/\.+/g, ",")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      Object.values(countryMeta).forEach(meta => {
+        meta.aliases.forEach(alias => {
+          value = value.replace(new RegExp(`\\b${alias}\\b`, "ig"), " ");
+        });
+      });
+
+      value = value.split(",").map(part => normalizeSpaces(part)).filter(Boolean)[0] || value;
+      if (country === "México" && normalizeKey(value) === "diana") value = "Ciudad de México";
+      return value;
+    }
+
+    function parseLocation(value = "") {
+      const raw = normalizeSpaces(String(value).replace(/[\n\r]+/g, " "));
+      if (!raw) return { city: "Sin dato", country: "Sin dato", lat: null, lon: null, raw: "", quality: "missing" };
+
+      const cityHit = extractCity(raw);
+      const countryHit = extractCountry(raw);
+      const parts = raw.replace(/['´`]/g, ",").replace(/\s+-\s+/g, ",").replace(/\//g, ",").split(",").map(normalizeSpaces).filter(Boolean);
+
+      let country = countryHit;
+      let city = cityHit?.city || "";
+      let lat = cityHit?.lat ?? null;
+      let lon = cityHit?.lon ?? null;
+
+      if (!country && cityHit?.country) country = cityHit.country;
+
+      if (!country && parts.length > 1) {
+        const last = normalizeCountry(parts[parts.length - 1]);
+        if (countryMeta[last]) country = last;
+      }
+
+      if (!country && parts.length === 1) {
+        const onlyCountry = normalizeCountry(parts[0]);
+        if (countryMeta[onlyCountry]) country = onlyCountry;
+      }
+
+      if (!city && country) {
+        const candidate = cleanCityCandidate(parts[0] || raw, country);
+        if (countryMeta[normalizeCountry(candidate)]) {
+          city = normalizeCountry(candidate);
+        } else {
+          const cleanedHit = extractCity(candidate);
+          city = cleanedHit?.city || toTitleCase(candidate);
+          lat = cleanedHit?.lat ?? lat;
+          lon = cleanedHit?.lon ?? lon;
+        }
+      }
+
+      if (!city && !country && parts.length >= 2) {
+        city = toTitleCase(parts.slice(0, -1).join(" "));
+        country = normalizeCountry(parts[parts.length - 1]);
+      }
+
+      if (!city && country) city = country;
+      if (!country) country = "Sin dato";
+
+      if ((lat == null || lon == null) && city && city !== "Sin dato") {
+        const fallbackHit = cityGazetteer[normalizeKey(city)];
+        if (fallbackHit) {
+          city = fallbackHit.city;
+          country = country === "Sin dato" ? fallbackHit.country : country;
+          lat = fallbackHit.lat;
+          lon = fallbackHit.lon;
+        }
+      }
+
+      if ((lat == null || lon == null) && countryMeta[country]) {
+        [lat, lon] = countryMeta[country].center;
+      }
+
+      const quality = country === "Sin dato" ? "country-missing" : (cityHit ? "city-exact" : "country-fallback");
+      return { city: city || "Sin dato", country, lat, lon, raw, quality };
+    }
+
+    function parseAge(value) {
+      const n = parseInt(String(value).replace(/[^0-9]/g, ""), 10);
+      return Number.isFinite(n) && n > 0 && n < 110 ? n : null;
+    }
+
+    function ageBucket(age) {
+      if (age == null) return "Sin dato";
+      if (age < 25) return "Menos de 25";
+      if (age <= 34) return "25-34";
+      if (age <= 44) return "35-44";
+      if (age <= 54) return "45-54";
+      if (age <= 64) return "55-64";
+      return "65 o más";
+    }
+
+    function splitAreas(value = "") {
+      let text = normalizeSpaces(value);
+      if (!text) return [];
+
+      const protectedAreas = [];
+      CANONICAL_AREAS.forEach((area, index) => {
+        const token = `__AREA_${index}__`;
+        const pattern = area.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        text = text.replace(new RegExp(pattern, "gi"), () => {
+          protectedAreas[index] = area;
+          return token;
+        });
+      });
+
+      return text
+        .split(",")
+        .map(v => normalizeSpaces(v))
+        .filter(Boolean)
+        .map(v => {
+          const match = v.match(/^__AREA_(\d+)__$/);
+          return match ? protectedAreas[Number(match[1])] : v;
+        });
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function countBy(items) {
+      const map = new Map();
+      items.filter(Boolean).forEach(item => map.set(item, (map.get(item) || 0) + 1));
+      return Array.from(map.entries()).sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), "es"));
+    }
+
+    function unique(arr) {
+      return [...new Set(arr)];
+    }
+
+    function populateFilters(data) {
+      const countries = unique(data.map(d => d.country).filter(c => c && c !== "Sin dato")).sort((a, b) => a.localeCompare(b, "es"));
+      const education = unique(data.map(d => d.education).filter(Boolean)).sort((a, b) => a.localeCompare(b, "es"));
+      const areas = unique(data.flatMap(d => d.areas)).sort((a, b) => a.localeCompare(b, "es"));
+
+      countryEl.innerHTML = '<option value="">Todos</option>' + countries.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+      educationEl.innerHTML = '<option value="">Todos</option>' + education.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+      areaEl.innerHTML = '<option value="">Todas</option>' + areas.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join("");
+    }
+
+    function filterData() {
+      const q = normalizeKey(searchEl.value);
+      const country = countryEl.value;
+      const education = educationEl.value;
+      const area = areaEl.value;
+
+      return rawData.filter(d => {
+        const haystack = normalizeKey([d.city, d.country, d.education, d.reason, d.locationRaw, ...d.areas].join(" "));
+        return (!q || haystack.includes(q)) &&
+          (!country || d.country === country) &&
+          (!education || d.education === education) &&
+          (!area || d.areas.includes(area)) &&
+          (!chartFilters.country || d.country === chartFilters.country) &&
+          (!chartFilters.age || ageBucket(d.age) === chartFilters.age) &&
+          (!chartFilters.education || d.education === chartFilters.education) &&
+          (!chartFilters.area || d.areas.includes(chartFilters.area));
+      });
+    }
+
+    function toggleChartFilter(key, value) {
+      chartFilters[key] = chartFilters[key] === value ? "" : value;
+      renderAll();
+    }
+
+    function clearChartFilters() {
+      Object.keys(chartFilters).forEach(key => { chartFilters[key] = ""; });
+      renderAll();
+    }
+
+    function renderActiveFilters() {
+      const labels = {
+        country: "País",
+        age: "Edad",
+        education: "Educación",
+        area: "Área"
+      };
+      const active = Object.entries(chartFilters).filter(([, value]) => value);
+      activeFiltersEl.innerHTML = active.map(([key, value], index) => (
+        `<button class="filter-chip" type="button" data-filter="${key}" style="border-left-color:${palette[index % palette.length]}">${labels[key]}: ${escapeHtml(value)}</button>`
+      )).join("");
+      clearFiltersEl.hidden = active.length === 0;
+    }
+
+    function bindPlotClick(id, key, getValue) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.removeAllListeners?.("plotly_click");
+      el.on("plotly_click", event => {
+        const value = getValue(event.points?.[0]);
+        if (value) toggleChartFilter(key, value);
+      });
+    }
+
+    function plotLayout(extra = {}) {
+      return {
+        margin: { l: 120, r: 20, t: 10, b: 44 },
+        paper_bgcolor: "#fffdf8",
+        plot_bgcolor: "#fffdf8",
+        font: { family: "Inter, Segoe UI, sans-serif", color: "#10223a" },
+        colorway: palette,
+        autosize: true,
+        ...extra
+      };
+    }
+
+    function renderStats(data) {
+      document.getElementById("statResponses").textContent = data.length;
+      document.getElementById("statCountries").textContent = unique(data.map(d => d.country).filter(c => c && c !== "Sin dato")).length;
+      document.getElementById("statCities").textContent = unique(data.map(d => `${d.city}|${d.country}`).filter(v => !v.startsWith("Sin dato"))).length;
+      const ages = data.map(d => d.age).filter(v => v != null);
+      document.getElementById("statAvgAge").textContent = ages.length ? (ages.reduce((a, b) => a + b, 0) / ages.length).toFixed(1) : "-";
+      document.getElementById("statReasons").textContent = data.filter(d => d.reason).length;
+    }
+
+    function renderCountries(data) {
+      const rows = countBy(data.map(d => d.country)).filter(([k]) => k !== "Sin dato").slice(0, 12);
+      Plotly.newPlot("chartCountries", [{
+        type: "bar",
+        x: rows.map(r => r[1]).reverse(),
+        y: rows.map(r => r[0]).reverse(),
+        orientation: "h",
+        marker: { color: rows.map(r => getCountryColor(r[0])).reverse() },
+        hovertemplate: "%{y}: %{x}<extra></extra>"
+      }], plotLayout({
+        margin: { l: 120, r: 20, t: 10, b: 42 },
+        xaxis: { title: "Cantidad de respuestas", gridcolor: "#ece5d7" },
+        yaxis: { automargin: true }
+      }), { responsive: true, displayModeBar: false })
+        .then(() => bindPlotClick("chartCountries", "country", point => point?.y));
+    }
+
+    function renderAge(data) {
+      const order = ["Menos de 25", "25-34", "35-44", "45-54", "55-64", "65 o más", "Sin dato"];
+      const map = new Map(countBy(data.map(d => ageBucket(d.age))));
+      const values = order.map(k => map.get(k) || 0);
+      const max = Math.max(...values, 1);
+      const colors = values.map(value => {
+        const t = value / max;
+        const lightness = 82 - t * 48;
+        return `hsl(198 78% ${lightness}%)`;
+      });
+      Plotly.newPlot("chartAge", [{
+        type: "bar",
+        x: order,
+        y: values,
+        marker: { color: colors },
+        hovertemplate: "%{x}: %{y}<extra></extra>"
+      }], plotLayout({
+        margin: { l: 50, r: 20, t: 10, b: 60 },
+        yaxis: { title: "Cantidad", gridcolor: "#ece5d7" }
+      }), { responsive: true, displayModeBar: false })
+        .then(() => bindPlotClick("chartAge", "age", point => point?.x));
+    }
+
+    function renderEducation(data) {
+      const rows = countBy(data.map(d => d.education)).slice(0, 12);
+      Plotly.newPlot("chartEducation", [{
+        type: "bar",
+        x: rows.map(r => r[1]).reverse(),
+        y: rows.map(r => r[0]).reverse(),
+        orientation: "h",
+        marker: { color: "#10223a" },
+        hovertemplate: "%{y}: %{x}<extra></extra>"
+      }], plotLayout({
+        margin: { l: 230, r: 20, t: 10, b: 42 },
+        xaxis: { title: "Cantidad", gridcolor: "#ece5d7" },
+        yaxis: { automargin: true }
+      }), { responsive: true, displayModeBar: false })
+        .then(() => bindPlotClick("chartEducation", "education", point => point?.y));
+    }
+
+    function renderAreas(data) {
+      const rows = countBy(data.flatMap(d => d.areas)).slice(0, 10);
+      Plotly.newPlot("chartAreas", [{
+        type: "bar",
+        x: rows.map(r => r[1]).reverse(),
+        y: rows.map(r => r[0]).reverse(),
+        orientation: "h",
+        marker: { color: "#1494c8" },
+        hovertemplate: "%{y}: %{x}<extra></extra>"
+      }], plotLayout({
+        margin: { l: 230, r: 20, t: 10, b: 42 },
+        xaxis: { title: "Menciones", gridcolor: "#ece5d7" },
+        yaxis: { automargin: true }
+      }), { responsive: true, displayModeBar: false })
+        .then(() => bindPlotClick("chartAreas", "area", point => point?.y));
+    }
+
+    function tokenizeReasons(data) {
+      const words = [];
+      data.forEach(d => {
+        normalizeKey(d.reason).split(" ").forEach(word => {
+          if (word.length > 3 && !stopwords.has(word)) words.push(word);
+        });
+      });
+      return countBy(words);
+    }
+
+    function classifyThemes(data) {
+      if (aiThemes.mode === "ai" && aiThemes.assignments.size) {
+        return themeDefs.map(theme => {
+          const count = data.filter(d => d.reason && aiThemes.assignments.get(d.reason)?.theme === theme.name).length;
+          return { ...theme, count };
+        }).sort((a, b) => b.count - a.count);
+      }
+
+      return themeDefs.map(theme => {
+        const matches = data.filter(d => {
+          const text = normalizeKey(d.reason);
+          return theme.words.some(word => text.includes(normalizeKey(word)));
+        });
+        return { ...theme, count: matches.length };
+      }).sort((a, b) => b.count - a.count);
+    }
+
+    function motivationMatches(row, selection = motivationSelection) {
+      if (!row.reason) return false;
+      if (!selection.type || !selection.value) return true;
+      const text = normalizeKey(row.reason);
+      if (selection.type === "word") return text.split(" ").includes(normalizeKey(selection.value));
+      if (selection.type === "theme") {
+        if (aiThemes.mode === "ai" && aiThemes.assignments.size) {
+          return aiThemes.assignments.get(row.reason)?.theme === selection.value;
+        }
+        const theme = themeDefs.find(item => item.name === selection.value);
+        return theme ? theme.words.some(word => text.includes(normalizeKey(word))) : true;
+      }
+      return true;
+    }
+
+    function vectorFromTensor(output) {
+      if (output?.data) return Array.from(output.data);
+      const list = output?.tolist?.();
+      if (Array.isArray(list?.[0])) return list.flat(Infinity);
+      if (Array.isArray(list)) return list;
+      return [];
+    }
+
+    function dotProduct(a, b) {
+      const length = Math.min(a.length, b.length);
+      let value = 0;
+      for (let i = 0; i < length; i++) value += a[i] * b[i];
+      return value;
+    }
+
+    async function embedText(text) {
+      const output = await aiThemes.extractor(text, { pooling: "mean", normalize: true });
+      return vectorFromTensor(output);
+    }
+
+    function updateAiProgress(percent, message, visible = true) {
+      const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+      aiProgressEl.classList.toggle("is-visible", visible);
+      aiProgressEl.setAttribute("aria-hidden", visible ? "false" : "true");
+      aiProgressBarEl.style.width = `${safePercent}%`;
+      aiProgressValueEl.textContent = `${safePercent}%`;
+      if (message) aiStatusEl.textContent = message;
+    }
+
+    async function runAiThemeClassification() {
+      if (aiThemes.loading) return;
+      aiThemes.loading = true;
+      aiThemes.error = "";
+      runAiThemesEl.disabled = true;
+      updateAiProgress(4, "Esto puede tardar un poquito... pero no te vayas. Estoy preparando la IA local.");
+
+      try {
+        if (!aiThemes.extractor) {
+          updateAiProgress(10, "Estoy trayendo el modelo al navegador. La primera vez puede demorar un poco.");
+          const { pipeline, env } = await import(TRANSFORMERS_JS_URL);
+          env.allowLocalModels = false;
+          updateAiProgress(22, "Modelo ubicado. Ahora lo estoy cargando en memoria, paciencia que ya arranca.");
+          aiThemes.extractor = await pipeline("feature-extraction", EMBEDDING_MODEL);
+        }
+
+        if (!aiThemes.themeVectors) {
+          updateAiProgress(38, "Estoy leyendo semánticamente los temas para tener con qué comparar.");
+          aiThemes.themeVectors = await Promise.all(themeDefs.map(async theme => ({
+            theme: theme.name,
+            vector: await embedText(`${theme.name}. ${theme.description}`)
+          })));
+        }
+
+        const reasons = unique(rawData.map(d => d.reason).filter(Boolean));
+        aiThemes.assignments.clear();
+        for (let i = 0; i < reasons.length; i++) {
+          const progress = 45 + ((i + 1) / Math.max(reasons.length, 1)) * 50;
+          updateAiProgress(progress, `Estoy clasificando las motivaciones (${i + 1}/${reasons.length}). Esto puede tardar un poquito... pero no te vayas.`);
+          const vector = await embedText(reasons[i]);
+          const best = aiThemes.themeVectors
+            .map(item => ({ ...item, score: dotProduct(vector, item.vector) }))
+            .sort((a, b) => b.score - a.score)[0];
+          aiThemes.assignments.set(reasons[i], { theme: best.theme, score: best.score });
+        }
+
+        aiThemes.mode = "ai";
+        motivationSelection = { type: "", value: "" };
+        updateAiProgress(100, `Listo: IA local activa (${reasons.length} respuestas clasificadas).`);
+        renderAll();
+      } catch (error) {
+        console.error(error);
+        aiThemes.error = error.message || "No se pudo cargar la IA local";
+        updateAiProgress(0, "No se pudo usar IA local. Sigue activo el modo por palabras clave.", false);
+      } finally {
+        aiThemes.loading = false;
+        runAiThemesEl.disabled = false;
+        if (aiThemes.mode === "ai") {
+          setTimeout(() => updateAiProgress(100, `Modo actual: IA local (${aiThemes.assignments.size} respuestas clasificadas)`, false), 1400);
+        }
+      }
+    }
+
+    function selectMotivation(type, value) {
+      if (motivationSelection.type === type && motivationSelection.value === value) {
+        motivationSelection = { type: "", value: "" };
+      } else {
+        motivationSelection = { type, value };
+      }
+      renderAll();
+    }
+
+    function renderMotivationResults(data) {
+      const rows = data.filter(d => motivationMatches(d));
+      const title = motivationSelection.value
+        ? `${rows.length} respuestas: ${motivationSelection.value}`
+        : `${rows.length} respuestas con motivación`;
+
+      document.getElementById("motivationResultsTitle").textContent = title;
+      clearMotivationSelectionEl.hidden = !motivationSelection.value;
+      document.getElementById("motivationResults").innerHTML = `
+        <table>
+          <thead><tr><th>Ciudad / país</th><th>Edad</th><th>Tema IA</th><th>Motivación</th></tr></thead>
+          <tbody>
+            ${rows.map(d => `
+              <tr>
+                <td>${escapeHtml(`${d.city}, ${d.country}`)}</td>
+                <td>${escapeHtml(d.age ?? "Sin dato")}</td>
+                <td>${escapeHtml(aiThemes.assignments.get(d.reason)?.theme || "-")}</td>
+                <td>${escapeHtml(d.reason)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderMotivations(data) {
+      const words = tokenizeReasons(data).slice(0, 42);
+      const max = words[0]?.[1] || 1;
+      const cloudEl = document.getElementById("wordCloud");
+      cloudEl.classList.toggle("is-empty", words.length === 0);
+      cloudEl.innerHTML = words.map(([word, count], i) => {
+        const size = 15 + (count / max) * 34;
+        const color = palette[i % palette.length];
+        const active = motivationSelection.type === "word" && motivationSelection.value === word ? " is-active" : "";
+        const duration = 6.5 + (i % 7) * .55;
+        const delay = -1 * ((i % 11) * .42);
+        const y = -4 - (i % 5);
+        const rotation = ((i % 2 === 0 ? 1 : -1) * (.4 + (i % 4) * .25)).toFixed(2);
+        const lane = i % 6;
+        const step = Math.floor(i / 6);
+        const baseX = 9 + lane * 16;
+        const waveX = baseX + Math.sin(step * 1.18 + lane * .9) * 5.5;
+        const waveY = 9 + step * 14.5 + Math.cos(lane * 1.35 + step * .72) * 5.5;
+        const clampedX = Math.max(4, Math.min(86, waveX));
+        const clampedY = Math.max(6, Math.min(88, waveY));
+        return `<span class="${active}" data-word="${escapeHtml(word)}" style="font-size:${size.toFixed(1)}px;color:${color};--wave-x:${clampedX.toFixed(2)}%;--wave-y:${clampedY.toFixed(2)}%;--float-duration:${duration.toFixed(2)}s;--float-delay:${delay.toFixed(2)}s;--float-y:${y}px;--float-r:${rotation}deg" title="${count} menciones">${escapeHtml(word)}</span>`;
+      }).join("") || "<span>No hay textos para analizar</span>";
+
+      const themes = classifyThemes(data);
+      const maxTheme = themes[0]?.count || 1;
+      aiStatusEl.textContent = aiThemes.mode === "ai"
+        ? `Modo actual: IA local (${aiThemes.assignments.size} respuestas clasificadas)`
+        : "Modo actual: palabras clave";
+      document.getElementById("themePanel").innerHTML = themes.map(theme => `
+        <button class="theme-row${motivationSelection.type === "theme" && motivationSelection.value === theme.name ? " is-active" : ""}" type="button" data-theme="${escapeHtml(theme.name)}">
+          <div>
+            <strong>${escapeHtml(theme.name)}</strong>
+            <div class="theme-bar"><i style="width:${Math.max(4, theme.count / maxTheme * 100)}%;background:${theme.color}"></i></div>
+          </div>
+          <strong>${theme.count}</strong>
+        </button>
+      `).join("");
+
+      renderMotivationResults(data);
+    }
+
+    function initMap() {
+      map = L.map("map", { scrollWheelZoom: true }).setView([-18, -62], 4);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+      countryLayerGroup = L.layerGroup().addTo(map);
+      cityLayerGroup = L.layerGroup().addTo(map);
+
+      const legend = L.control({ position: "bottomright" });
+      legend.onAdd = () => {
+        const div = L.DomUtil.create("div", "map-legend");
+        div.innerHTML = '<strong>Leyenda</strong><br><span class="legend-dot"></span>Ciudades por conteo<br>Polígonos: países filtrados';
+        return div;
+      };
+      legend.addTo(map);
+
+      fetch(COUNTRY_GEOJSON_URL)
+        .then(res => res.ok ? res.json() : null)
+        .then(json => { countryGeojson = json; renderMap(filterData()); })
+        .catch(() => renderMap(filterData()));
+    }
+
+    function renderMap(data) {
+      if (!map) return;
+      countryLayerGroup.clearLayers();
+      cityLayerGroup.clearLayers();
+
+      const countryCounts = new Map(countBy(data.map(d => d.country)).filter(([c]) => c !== "Sin dato"));
+      const maxCountry = Math.max(...countryCounts.values(), 1);
+      const isoSet = new Set([...countryCounts.keys()].map(country => countryMeta[country]?.iso3).filter(Boolean));
+
+      if (countryGeojson) {
+        L.geoJSON(countryGeojson, {
+          filter: feature => isoSet.has(feature.properties.ISO_A3 || feature.properties["ISO3166-1-Alpha-3"]),
+          style: feature => {
+            const iso = feature.properties.ISO_A3 || feature.properties["ISO3166-1-Alpha-3"];
+            const country = Object.keys(countryMeta).find(name => countryMeta[name].iso3 === iso);
+            const color = getCountryColor(country);
+            const count = countryCounts.get(country) || 0;
+            return {
+              color,
+              weight: 1.4,
+              fillColor: color,
+              fillOpacity: .12 + (count / maxCountry) * .28
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const iso = feature.properties.ISO_A3 || feature.properties["ISO3166-1-Alpha-3"];
+            const country = Object.keys(countryMeta).find(name => countryMeta[name].iso3 === iso);
+            layer.bindPopup(`<strong>${escapeHtml(country)}</strong><br>${countryCounts.get(country) || 0} respuestas`);
+            layer.on("click", () => toggleChartFilter("country", country));
+          }
+        }).addTo(countryLayerGroup);
+      } else {
+        countryCounts.forEach((count, country) => {
+          const center = countryMeta[country]?.center;
+          if (!center) return;
+          L.circle(center, {
+            radius: 200000 + count * 18000,
+            color: getCountryColor(country),
+            fillColor: getCountryColor(country),
+            fillOpacity: .16,
+            weight: 1
+          }).bindPopup(`<strong>${escapeHtml(country)}</strong><br>${count} respuestas`)
+            .on("click", () => toggleChartFilter("country", country))
+            .addTo(countryLayerGroup);
+        });
+      }
+
+      const cityRows = countBy(data.filter(d => d.lat != null && d.lon != null).map(d => `${d.city}|${d.country}|${d.lat}|${d.lon}`));
+      const maxCity = cityRows[0]?.[1] || 1;
+      const bounds = [];
+      cityRows.forEach(([key, count]) => {
+        const [city, country, lat, lon] = key.split("|");
+        const radius = 6 + Math.sqrt(count / maxCity) * 22;
+        const color = getCountryColor(country);
+        const marker = L.circleMarker([Number(lat), Number(lon)], {
+          radius,
+          color: "#fffdf8",
+          weight: 1.5,
+          fillColor: color,
+          fillOpacity: .84
+        }).bindPopup(`<strong>${escapeHtml(city)}</strong><br>${escapeHtml(country)}<br>${count} respuestas`);
+        marker.bindTooltip(`${escapeHtml(city)}: ${count} respuestas`, {
+          direction: "top",
+          sticky: true,
+          opacity: .95
+        });
+        marker.on("click", () => toggleChartFilter("country", country));
+        marker.addTo(cityLayerGroup);
+        bounds.push([Number(lat), Number(lon)]);
+      });
+
+      if (bounds.length) {
+        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 5 });
+      }
+    }
+
+    function renderAll() {
+      const data = filterData();
+      renderStats(data);
+      renderCountries(data);
+      renderAge(data);
+      renderEducation(data);
+      renderAreas(data);
+      renderMotivations(data);
+      renderActiveFilters();
+      renderMap(data);
+      const located = data.filter(d => d.country !== "Sin dato").length;
+      statusEl.textContent = `Mostrando ${data.length} respuestas filtradas sobre ${rawData.length}.`;
+    }
+
+    function transformRows(rows) {
+      return rows.map(row => {
+        const loc = parseLocation(row[COL_LOCATION]);
+        return {
+          timestamp: row[COL_TIMESTAMP] || "",
+          locationRaw: row[COL_LOCATION] || "",
+          city: loc.city,
+          country: loc.country,
+          lat: loc.lat,
+          lon: loc.lon,
+          quality: loc.quality,
+          age: parseAge(row[COL_AGE]),
+          education: normalizeSpaces(row[COL_EDUCATION] || "Sin dato") || "Sin dato",
+          areas: splitAreas(row[COL_AREA]),
+          reason: normalizeSpaces(row[COL_REASON] || "")
+        };
+      });
+    }
+
+    function initEvents() {
+      [searchEl, countryEl, educationEl, areaEl].forEach(el => {
+        el.addEventListener("input", renderAll);
+        el.addEventListener("change", renderAll);
+      });
+      clearFiltersEl.addEventListener("click", clearChartFilters);
+      activeFiltersEl.addEventListener("click", event => {
+        const button = event.target.closest("[data-filter]");
+        if (!button) return;
+        chartFilters[button.dataset.filter] = "";
+        renderAll();
+      });
+      clearMotivationSelectionEl.addEventListener("click", () => {
+        motivationSelection = { type: "", value: "" };
+        renderAll();
+      });
+      document.getElementById("wordCloud").addEventListener("click", event => {
+        const word = event.target.closest("[data-word]")?.dataset.word;
+        if (word) selectMotivation("word", word);
+      });
+      document.getElementById("themePanel").addEventListener("click", event => {
+        const theme = event.target.closest("[data-theme]")?.dataset.theme;
+        if (theme) selectMotivation("theme", theme);
+      });
+      runAiThemesEl.addEventListener("click", runAiThemeClassification);
+    }
+
+    function loadData() {
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: ({ data }) => {
+          rawData = transformRows(data);
+          populateFilters(rawData);
+          initEvents();
+          initMap();
+          renderAll();
+        },
+        error: (err) => {
+          console.error(err);
+          statusEl.textContent = "No se pudieron cargar los datos. Revisá que el Sheet esté publicado como CSV y que la URL sea pública.";
+        }
+      });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>

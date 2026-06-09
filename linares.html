@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La fuente casi perfecta</title>
+  <style>
+    :root {
+      --bg: #f4f1e9;
+      --paper: #fffdf8;
+      --ink: #10223a;
+      --muted: #53647b;
+      --line: #d8d2c4;
+      --red: #b01322;
+      --olive: #9a9800;
+      --cyan: #1494c8;
+      --magenta: #c020ce;
+      --shadow: 0 18px 55px rgba(16, 34, 58, .12);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(176,19,34,.92) 0 3px, transparent 3px 100%),
+        linear-gradient(90deg, transparent 0 10px, rgba(154,152,0,.84) 10px 13px, transparent 13px 100%),
+        linear-gradient(90deg, transparent 0 20px, rgba(20,148,200,.82) 20px 23px, transparent 23px 100%),
+        linear-gradient(90deg, transparent 0 31px, rgba(192,32,206,.8) 31px 34px, transparent 34px 100%),
+        var(--bg);
+    }
+    .wrap { width: min(1480px, calc(100% - 28px)); margin: 0 auto; padding: 26px 0 34px; }
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.24fr) minmax(240px, .76fr);
+      gap: 18px;
+      min-height: 300px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 22px;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -28px;
+      width: 300px;
+      background-image: url("general ciclo 1b.png");
+      background-position: left center;
+      background-size: cover;
+      opacity: .22;
+      pointer-events: none;
+    }
+    .hero-copy {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px 0 42px 300px;
+    }
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .hero h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(2rem, 4.6vw, 4.5rem);
+      line-height: 1.04;
+      font-weight: 850;
+    }
+    .hero p {
+      margin: 20px 0 0;
+      max-width: 760px;
+      color: #2e4058;
+      font-size: 1.02rem;
+      line-height: 1.55;
+    }
+    .meta {
+      align-self: center;
+      border-left: 1px solid var(--line);
+      padding: 24px 0 24px 24px;
+    }
+    .meta-item {
+      border-left: 5px solid var(--red);
+      padding: 8px 0 10px 14px;
+      margin-bottom: 10px;
+      font-weight: 780;
+    }
+    .meta-item:nth-child(2) { border-color: var(--olive); }
+    .meta-item:nth-child(3) { border-color: var(--cyan); }
+    .back {
+      display: inline-block;
+      margin-bottom: 14px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(240px, .76fr) minmax(0, 1.24fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header { padding: 17px 17px 0; }
+    .card-header h2,
+    .card-header h3 {
+      margin: 0 0 6px;
+      font-size: 1.02rem;
+      line-height: 1.3;
+    }
+    .card-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+    .flyer {
+      width: 100%;
+      display: block;
+      padding: 14px;
+    }
+    .section-body { padding: 14px 17px 18px; }
+    .section-body.full { height: 100%; }
+    .embed-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 560px;
+      border: 0;
+      border-radius: 6px;
+      background: #fff;
+    }
+    .section-title {
+      margin-top: 18px;
+    }
+    .section-title .card-header {
+      padding-bottom: 17px;
+    }
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .resource-grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .resource-grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .resource-grid.materials {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .resource-card {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      min-height: 280px;
+      padding: 16px 17px 18px;
+    }
+    .resource-card.with-preview {
+      grid-template-rows: 160px auto auto 1fr auto;
+      min-height: 430px;
+    }
+    .resource-card.with-site-preview {
+      grid-template-rows: 148px auto auto 1fr auto;
+      min-height: 410px;
+    }
+    .site-preview {
+      width: 100%;
+      height: 148px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+    }
+    .app-preview {
+      position: relative;
+      min-height: 160px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, rgba(16,34,58,.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,34,58,.08) 1px, transparent 1px),
+        #fff;
+      background-size: 26px 26px;
+    }
+    .app-preview::before,
+    .app-preview::after {
+      content: "";
+      position: absolute;
+      border: 2px solid rgba(16,34,58,.28);
+      border-radius: 38% 62% 54% 46% / 42% 44% 56% 58%;
+      background: rgba(20,148,200,.16);
+    }
+    .app-preview::before {
+      width: 46%;
+      height: 54%;
+      left: 10%;
+      top: 18%;
+      transform: rotate(-14deg);
+    }
+    .app-preview::after {
+      width: 42%;
+      height: 48%;
+      right: 10%;
+      bottom: 14%;
+      transform: rotate(18deg);
+      background: rgba(154,152,0,.16);
+    }
+    .preview-dot {
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 4px 12px rgba(16,34,58,.22);
+      z-index: 2;
+    }
+    .preview-dot:nth-child(1) { left: 22%; top: 34%; }
+    .preview-dot:nth-child(2) { left: 38%; top: 58%; background: var(--cyan); }
+    .preview-dot:nth-child(3) { left: 64%; top: 38%; background: var(--magenta); }
+    .preview-dot:nth-child(4) { left: 76%; top: 66%; background: var(--olive); }
+    .preview-label {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      z-index: 3;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,253,248,.94);
+      color: var(--ink);
+      font-size: .72rem;
+      font-weight: 800;
+    }
+    .app-preview.atlas {
+      background:
+        linear-gradient(135deg, rgba(20,148,200,.14), transparent 40%),
+        linear-gradient(90deg, rgba(16,34,58,.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,34,58,.08) 1px, transparent 1px),
+        #fff;
+      background-size: auto, 30px 30px, 30px 30px;
+    }
+    .app-preview.atlas::before {
+      width: 70%;
+      height: 20%;
+      left: 15%;
+      top: 28%;
+      border-radius: 999px;
+      transform: rotate(-8deg);
+      background: rgba(20,148,200,.2);
+    }
+    .app-preview.atlas::after {
+      width: 68%;
+      height: 20%;
+      right: 13%;
+      bottom: 28%;
+      border-radius: 999px;
+      transform: rotate(8deg);
+      background: rgba(192,32,206,.16);
+    }
+    .app-preview.segregation {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 5px;
+      padding: 12px;
+      background: #fff;
+    }
+    .app-preview.segregation::before,
+    .app-preview.segregation::after {
+      display: none;
+    }
+    .seg-cell {
+      border-radius: 4px;
+      border: 1px solid rgba(16,34,58,.12);
+      background: rgba(20,148,200,.18);
+    }
+    .seg-cell.hot { background: rgba(176,19,34,.74); }
+    .seg-cell.mid { background: rgba(154,152,0,.48); }
+    .seg-cell.cool { background: rgba(20,148,200,.48); }
+    .resource-card h4 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+    .resource-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    .video-card {
+      margin-top: 18px;
+    }
+    .video-card .section-body {
+      padding: 14px 17px 18px;
+    }
+    .video-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      min-height: 520px;
+      border: 0;
+      border-radius: 6px;
+      background: #000;
+      display: block;
+    }
+    .material-card {
+      grid-template-rows: 112px auto auto 1fr auto;
+    }
+    .material-thumb {
+      width: 100%;
+      height: 112px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fffdf8;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+    }
+    .material-icon {
+      position: relative;
+      min-height: 112px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background:
+        linear-gradient(135deg, rgba(20,148,200,.12), transparent 42%),
+        linear-gradient(90deg, rgba(16,34,58,.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,34,58,.06) 1px, transparent 1px),
+        #fffdf8;
+      background-size: auto, 24px 24px, 24px 24px;
+    }
+    .material-icon::before,
+    .material-icon::after {
+      content: "";
+      position: absolute;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      box-shadow: 0 12px 28px rgba(16,34,58,.14);
+    }
+    .material-icon::before {
+      width: 66px;
+      height: 78px;
+      left: 22px;
+      top: 17px;
+      transform: rotate(-6deg);
+    }
+    .material-icon::after {
+      width: 76px;
+      height: 56px;
+      right: 22px;
+      top: 29px;
+      transform: rotate(5deg);
+    }
+    .material-mark {
+      position: absolute;
+      inset: 24px auto auto 33px;
+      z-index: 2;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow:
+        65px 21px 0 -14px var(--red),
+        92px 4px 0 -17px var(--olive),
+        112px 32px 0 -18px var(--magenta);
+    }
+    .material-icon.book {
+      background:
+        linear-gradient(135deg, rgba(176,19,34,.10), transparent 42%),
+        linear-gradient(90deg, rgba(16,34,58,.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,34,58,.06) 1px, transparent 1px),
+        #fffdf8;
+      background-size: auto, 24px 24px, 24px 24px;
+    }
+    .material-icon.book .material-mark { background: var(--red); }
+    .material-icon.exercise {
+      background:
+        linear-gradient(135deg, rgba(154,152,0,.12), transparent 42%),
+        linear-gradient(90deg, rgba(16,34,58,.06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(16,34,58,.06) 1px, transparent 1px),
+        #fffdf8;
+      background-size: auto, 24px 24px, 24px 24px;
+    }
+    .material-icon.exercise .material-mark { background: var(--olive); }
+    .material-video {
+      width: 100%;
+      min-height: 112px;
+      border: 0;
+      border-radius: 6px;
+      background: #000;
+      display: block;
+    }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #2e4058;
+    }
+    .resource-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      width: fit-content;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--magenta);
+      border-radius: 6px;
+      background: var(--paper);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+    @media (max-width: 1100px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-copy { padding-left: 250px; }
+      .meta { border-left: 0; border-top: 1px solid var(--line); padding: 18px 0 24px 250px; }
+      .grid { grid-template-columns: 1fr; }
+      .resource-grid,
+      .resource-grid.two,
+      .resource-grid.four,
+      .resource-grid.materials { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      body { background: var(--bg); }
+      .wrap { width: min(100% - 24px, 1400px); padding-top: 16px; }
+      .hero::before { inset: 0 0 auto 0; width: 100%; height: 150px; opacity: .16; background-position: center 18%; }
+      .hero-copy { padding: 150px 0 22px; }
+      .meta { padding: 16px 0 22px; }
+      .embed-frame { min-height: 440px; }
+      .resource-grid,
+      .resource-grid.two,
+      .resource-grid.four,
+      .resource-grid.materials { grid-template-columns: 1fr; }
+      .resource-card,
+      .resource-card.with-preview,
+      .resource-card.with-site-preview { min-height: auto; }
+      .video-frame { min-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="Index2.html">Volver al panel</a>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><strong>Charlas abiertas</strong> sobre datos e investigación educativa</p>
+        <h1>La fuente casi perfecta</h1>
+        <p>(Inspirado en El crimen casi perfecto de Roberto Arlt)</p>
+      </div>
+      <aside class="meta">
+        <div class="meta-item">Panelista: Santiago Linares</div>
+        <div class="meta-item">Fecha: 29/05 - 18 hs</div>
+        <div class="meta-item">Tema: Información espacial y análisis territorial en educación</div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <img class="flyer" src="ciclo Linares 1b.png" alt="Flyer de la charla La fuente casi perfecta" />
+      </article>
+
+      <article class="card">
+        <div class="section-body full">
+          <iframe class="embed-frame" src="Presentacion%20Linares.pdf" title="Presentación Linares" allow="fullscreen"></iframe>
+        </div>
+      </article>
+    </section>
+
+    <section class="card section-title">
+      <div class="card-header">
+        <h3>Fuentes cartográficas y geoestadísticas</h3>
+        <p>Mapas, datos censales, oferta educativa y geoportales para trabajar territorialmente la información.</p>
+      </div>
+    </section>
+
+    <section class="resource-grid four">
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/Poblaciones.png" alt="Vista previa de Mapa población" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Mapa</span>
+          <span class="tag">Territorio</span>
+        </div>
+        <h4>Mapa población</h4>
+        <p>Visor cartográfico para explorar indicadores y capas territoriales de la plataforma Poblaciones.</p>
+        <a class="resource-link" href="https://mapa.poblaciones.org/map/" target="_blank" rel="noopener noreferrer">Abrir mapa</a>
+      </article>
+
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/EducacionCenso.png" alt="Vista previa de Educación en el Censo" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Censo 2022</span>
+          <span class="tag">Educación</span>
+        </div>
+        <h4>Educación en el Censo</h4>
+        <p>Indicadores educativos del Censo 2022 para analizar asistencia, nivel educativo y recortes territoriales.</p>
+        <a class="resource-link" href="https://poblaciones.org/2024/11/12/educacion-en-el-censo-nacional-de-poblacion-hogares-y-viviendas-2022/" target="_blank" rel="noopener noreferrer">Acceder</a>
+      </article>
+
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/MapaEducativo.png" alt="Vista previa de Mapa Educativo 2024" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Mapa educativo</span>
+          <span class="tag">2024</span>
+        </div>
+        <h4>Mapa Educativo 2024</h4>
+        <p>Cartografía de establecimientos educativos y datos asociados para aproximarse a oferta, matrícula y gestión.</p>
+        <a class="resource-link" href="https://poblaciones.org/2025/02/19/mapa-educativo-2024/" target="_blank" rel="noopener noreferrer">Acceder</a>
+      </article>
+
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/GeoPortal.png" alt="Vista previa del Portal estadístico del INDEC" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">INDEC</span>
+          <span class="tag">Geoportal</span>
+        </div>
+        <h4>Portal estadístico del INDEC</h4>
+        <p>Portal de consulta y trabajo con capas, geoservicios y geodatos oficiales.</p>
+        <a class="resource-link" href="https://portalgeoestadistico.indec.gob.ar" target="_blank" rel="noopener noreferrer">Abrir portal</a>
+      </article>
+    </section>
+
+    <section class="card section-title">
+      <div class="card-header">
+        <h3>Apps para análisis espacial</h3>
+        <p>Herramientas para explorar, mapear y analizar patrones territoriales.</p>
+      </div>
+    </section>
+
+    <section class="resource-grid four">
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/Geoda.png" alt="Vista previa de GeoDa" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Software</span>
+          <span class="tag">Estadística espacial</span>
+        </div>
+        <h4>GeoDa</h4>
+        <p>Aplicación para análisis exploratorio de datos espaciales, autocorrelación, clusters y visualización de mapas.</p>
+        <a class="resource-link" href="https://spatial.uchicago.edu/geoda" target="_blank" rel="noopener noreferrer">Abrir GeoDa</a>
+      </article>
+
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/Atlas.png" alt="Vista previa de Atlas" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Web GIS</span>
+          <span class="tag">Mapas</span>
+        </div>
+        <h4>Atlas</h4>
+        <p>Herramienta web colaborativa para crear mapas, conectar datos y construir flujos de análisis espacial.</p>
+        <a class="resource-link" href="https://atlas.co/" target="_blank" rel="noopener noreferrer">Abrir Atlas</a>
+      </article>
+
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/GeoSegregation.png" alt="Vista previa de Geo-Segregation Analyzer" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Segregación</span>
+          <span class="tag">Análisis</span>
+        </div>
+        <h4>Geo-Segregation Analyzer</h4>
+        <p>Herramienta orientada al análisis de segregación espacial y patrones de distribución territorial.</p>
+        <a class="resource-link" href="https://sourceforge.net/projects/geoseganalyzer/" target="_blank" rel="noopener noreferrer">Abrir herramienta</a>
+      </article>
+
+      <article class="card resource-card with-site-preview">
+        <img class="site-preview" src="pix/InfoStat.png" alt="Vista previa de InfoStat" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Estadística</span>
+          <span class="tag">Análisis</span>
+        </div>
+        <h4>InfoStat</h4>
+        <p>Software estadístico para procesamiento, visualización y análisis de datos cuantitativos.</p>
+        <a class="resource-link" href="https://www.infostat.com.ar/" target="_blank" rel="noopener noreferrer">Abrir InfoStat</a>
+      </article>
+    </section>
+
+    <section class="card section-title">
+      <div class="card-header">
+        <h3>Materiales de trabajo</h3>
+        <p>Carpetas compartidas para descargar bases, ampliar referencias y ejercitar análisis espacial.</p>
+      </div>
+    </section>
+
+    <section class="resource-grid materials">
+      <article class="card resource-card material-card">
+        <img class="material-thumb" src="pix/Mat1.png" alt="Miniatura de información y bases de datos del Censo" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Drive</span>
+          <span class="tag">Censo</span>
+        </div>
+        <h4>Información y bases de datos del Censo</h4>
+        <p>Para explorar y explotar datos de Argentina.</p>
+        <a class="resource-link" href="https://drive.google.com/drive/folders/1Uh7evuaC__L4zrZYTidX5sJnB6tzKPKc?usp=sharing" target="_blank" rel="noopener noreferrer">Abrir carpeta</a>
+      </article>
+
+      <article class="card resource-card material-card">
+        <img class="material-thumb" src="pix/Mat2.png" alt="Miniatura de bibliografía" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Drive</span>
+          <span class="tag">Bibliografía</span>
+        </div>
+        <h4>Bibliografía</h4>
+        <p>Para ampliar conceptos, métodos y referencias de análisis espacial.</p>
+        <a class="resource-link" href="https://drive.google.com/drive/folders/1EefAQTlBDyrH1Hhv3n6xVQpatQiFFLeO?usp=sharing" target="_blank" rel="noopener noreferrer">Abrir carpeta</a>
+      </article>
+
+      <article class="card resource-card material-card">
+        <img class="material-thumb" src="pix/Mat3.png" alt="Miniatura de materiales para ejercitación" loading="lazy" />
+        <div class="tag-row">
+          <span class="tag">Drive</span>
+          <span class="tag">Ejercitación</span>
+        </div>
+        <h4>Materiales para ejercitación</h4>
+        <p>Para replicar los ejercicios reaizados durante la charla.</p>
+        <a class="resource-link" href="https://drive.google.com/drive/folders/1_eImY1-OUsSy6IdtaymzUKeo2RwDfZGV?usp=sharing" target="_blank" rel="noopener noreferrer">Abrir carpeta</a>
+      </article>
+
+      <article class="card resource-card material-card">
+        <iframe class="material-video" src="https://www.loom.com/embed/8923c91b6c6a4050b995566c289d1b24" title="Accesibilidad geográfica a escuelas secundarias" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>
+        <div class="tag-row">
+          <span class="tag">Loom</span>
+          <span class="tag">Atlas</span>
+        </div>
+        <h4>Accesibilidad geográfica a escuelas secundarias</h4>
+        <p>Este Loom explica cómo realizar un análisis de accesibilidad geográfica a escuelas secundarias en Tandil usando un sistema de información geográfica (Atlas).</p>
+        <a class="resource-link" href="https://www.loom.com/share/8923c91b6c6a4050b995566c289d1b24" target="_blank" rel="noopener noreferrer">Abrir Loom</a>
+      </article>
+    </section>
+
+    <section class="card video-card">
+      <div class="card-header">
+        <h3>Video de la charla</h3>
+        <p>Registro completo de la presentación.</p>
+      </div>
+      <div class="section-body">
+        <iframe class="video-frame" src="https://www.youtube.com/embed/hNdebqjUdQY" title="Video de la charla de Santiago Linares" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
